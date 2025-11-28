@@ -1,0 +1,8 @@
+{
+  "name": "SafeSpace ",
+  "description": "Your personalized AI health guardian monitoring environmental risks.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ]
+}
