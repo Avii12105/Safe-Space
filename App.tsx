@@ -1,26 +1,41 @@
-import React, { useState } from 'react';
-import { ViewState } from './types';
-import { useProfile } from './hooks/useProfile';
-import { useEnvironment } from './hooks/useEnvironment';
+import React, { useEffect, useState } from "react";
+import { ViewState, HealthCondition } from "./types";
+import { useProfile } from "./hooks/useProfile";
+import { useEnvironment } from "./hooks/useEnvironment";
+import { useAuth } from "./hooks/useAuth";
 
-import MainLayout from './layout/MainLayout';
-import Landing from './pages/Landing';
-import Onboarding from './pages/Onboarding';
-import Loading from './pages/Loading';
-import Home from './pages/Home';
-import Reports from './pages/Reports'; // New
-import Journey from './pages/Journey';
+import MainLayout from "./layout/MainLayout";
+import Onboarding from "./pages/Onboarding";
+import Loading from "./pages/Loading";
+import Home from "./pages/Home";
+import Reports from "./pages/Reports";
+import Journey from "./pages/Journey";
+import Settings from "./pages/Settings";
+import Auth from "./pages/Auth";
 
 function App() {
-  const [view, setView] = useState<ViewState>('landing');
-  
-  const { 
-    profile, 
-    dailyQuests, 
-    showConfetti, 
-    selectPersona, 
-    handleQuestComplete 
-  } = useProfile();
+  const [view, setView] = useState<ViewState>("home");
+  const [hasFetchedEnv, setHasFetchedEnv] = useState(false);
+  const {
+    session,
+    loading: authLoading,
+    error: authError,
+    signIn,
+    signUp,
+    signOut,
+    isAuthReady,
+  } = useAuth();
+  const userId = session?.user?.id || null;
+
+  const {
+    profile,
+    dailyQuests,
+    showConfetti,
+    selectPersona,
+    handleQuestComplete,
+    loading: profileLoading,
+    updateProfile,
+  } = useProfile(userId);
 
   const {
     envData,
@@ -28,57 +43,105 @@ function App() {
     narrativeForecast, // Still keeping for future use or hidden
     loadingText,
     loadingProgress,
-    startAnalysis
+    startAnalysis,
   } = useEnvironment();
 
-  // Route Handlers
-  const handleConditionSelection = (condition: any) => {
-    selectPersona(condition); // This actually sets profile.condition now
-    setView('loading');
-    startAnalysis(
-      { ...profile, condition }, 
-      true, 
-      () => setView('home')
-    );
+  // Redirect user to onboarding if they haven't completed it yet
+  useEffect(() => {
+    if (profileLoading) return;
+    if (!profile.onboardingComplete) {
+      setView("onboarding");
+    } else if (view === "onboarding" || view === "landing") {
+      setView("home");
+    }
+  }, [profile.onboardingComplete, profileLoading, view]);
+
+  const handleConditionSelection = async (condition: HealthCondition) => {
+    await selectPersona(condition);
+    setView("loading");
+    const nextProfile = { ...profile, condition };
+    startAnalysis(nextProfile, true, () => setView("home"));
   };
+
+  useEffect(() => {
+    if (
+      !profileLoading &&
+      profile.onboardingComplete &&
+      !envData &&
+      !hasFetchedEnv &&
+      view !== "loading"
+    ) {
+      setHasFetchedEnv(true);
+      setView("loading");
+      startAnalysis(profile, true, () => setView("home"));
+    }
+  }, [profileLoading, profile, envData, hasFetchedEnv, startAnalysis, view]);
+
+  if (!isAuthReady) {
+    // When Supabase isn't configured we allow offline usage without auth
+  } else if (!authLoading && !session) {
+    return (
+      <Auth
+        onSignIn={signIn}
+        onSignUp={signUp}
+        loading={authLoading}
+        error={authError}
+        isSupabaseReady={isAuthReady}
+      />
+    );
+  }
+
+  if (authLoading || profileLoading) {
+    return <Loading text="Preparing your space..." progress={70} />;
+  }
 
   return (
     <>
-      {view === 'landing' && (
-        <Landing onStart={() => setView('onboarding')} />
-      )}
-      
-      {view === 'onboarding' && (
+      {view === "onboarding" && (
         <Onboarding onSelectPersona={handleConditionSelection} />
       )}
-      
-      {view === 'loading' && (
+
+      {view === "loading" && (
         <Loading text={loadingText} progress={loadingProgress} />
       )}
-      
+
       {/* Main App Views */}
-      {(view === 'home' || view === 'reports' || view === 'journey' || view === 'sos') && (
-        <MainLayout 
-          view={view} 
-          setView={setView} 
-          envData={envData} 
+      {(view === "home" ||
+        view === "reports" ||
+        view === "journey" ||
+        view === "settings" ||
+        view === "sos") && (
+        <MainLayout
+          view={view}
+          setView={setView}
+          envData={envData}
           showConfetti={showConfetti}
+          userId={userId}
+          onLogout={signOut}
+          userEmail={session?.user?.email}
         >
-          {view === 'home' && (
-            <Home 
-              profile={profile} 
-              envData={envData} 
-              analysis={analysis} 
-              setView={setView} 
+          {view === "home" && (
+            <Home
+              profile={profile}
+              envData={envData}
+              analysis={analysis}
+              narrativeForecast={narrativeForecast}
+              setView={setView}
             />
           )}
-          
-          {view === 'reports' && (
-            <Reports />
+
+          {view === "reports" && <Reports />}
+
+          {view === "journey" && (
+            <Journey profile={profile} userId={userId} />
           )}
-          
-          {view === 'journey' && (
-            <Journey profile={profile} />
+
+          {view === "settings" && (
+            <Settings
+              profile={profile}
+              onUpdateProfile={updateProfile}
+              userEmail={session?.user?.email}
+            />
           )}
         </MainLayout>
       )}

@@ -22,7 +22,8 @@ export const DEFAULT_PROFILE: UserProfile = {
   streak: 0,
   points: 0,
   treesPlanted: 0,
-  gardenLevel: 1
+  gardenLevel: 1,
+  onboardingComplete: false,
 };
 
 export const DAILY_QUESTS: QuestItem[] = [
