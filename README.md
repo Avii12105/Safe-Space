@@ -27,21 +27,8 @@ A real-time environmental health monitoring app that uses AI to keep you safe fr
 2. **Set up environment variables:**
 
    - Copy `.env.example` to `.env`
-   - Add your API keys:
-     ```env
-     VITE_API_KEY=your_gemini_api_key
-     VITE_WEATHER_API_KEY=your_openweathermap_key
-     VITE_SUPABASE_URL=https://llmrmokanfdilgbmjjhl.supabase.co
-     VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxsbXJtb2thbmZkaWxnYm1qamhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMzk5NzUsImV4cCI6MjA3OTkxNTk3NX0.HNLFiwP74toQTOnkZ0hoKaprSLZq1Fm4GMkbylLX-6I
-     ```
-
-3. **Get your FREE API keys:**
-
-   - **Gemini API**: https://aistudio.google.com/app/apikey
-   - **OpenWeatherMap**: https://openweathermap.org/api (1,000 free calls/day)
-
-   📖 See [API_SETUP.md](./API_SETUP.md) for detailed instructions
-
+   - Add your API keys.
+    
 4. **Run the app:**
 
    ```bash
@@ -119,5 +106,3 @@ Safe Space now uses Supabase Auth. Existing accounts see the dashboard immediate
 npm run build
 npm run preview
 ```
-
-View your app in AI Studio: https://ai.studio/apps/drive/1iSwm9qu7NmmIWV4Xh9uqrYSuhvPcS91K
